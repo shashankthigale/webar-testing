@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.0.3/dist/mindar-image-three.prod.js"></script>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+          container: document.querySelector("#container"),
+          imageTargetSrc:
+            "https://github.com/shashankthigale/webar-testing/blob/main/targets.mind",
+        });
+        await mindarThree.start();
+      });
+    </script>
+  </body>
+</html>

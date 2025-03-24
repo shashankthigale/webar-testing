@@ -28,7 +28,6 @@
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true"
       >
-        <!-- 👇 Preload your video asset -->
         <a-assets>
           <video
             id="ad-video"
@@ -38,15 +37,15 @@
             crossorigin="anonymous"
             playsinline
             webkit-playsinline
+            muted
           ></video>
         </a-assets>
 
-        <!-- 📷 Camera setup -->
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <!-- 🧠 MindAR will overlay this when it detects your target image -->
-        <a-entity mindar-image-target="targetIndex: 0">
+        <a-entity mindar-image-target="targetIndex: 0" id="video-target">
           <a-video
+            id="video-plane"
             src="#ad-video"
             width="1"
             height="0.6"
@@ -59,5 +58,25 @@
         </a-entity>
       </a-scene>
     </div>
+
+    <script>
+      // Wait for scene to be fully loaded
+      document.addEventListener("DOMContentLoaded", () => {
+        const video = document.querySelector("#ad-video");
+        const target = document.querySelector("#video-target");
+
+        target.addEventListener("targetFound", () => {
+          console.log("Marker found, playing video");
+          video.play().catch((err) => {
+            console.warn("Autoplay blocked, waiting for user interaction");
+          });
+        });
+
+        target.addEventListener("targetLost", () => {
+          console.log("Marker lost, pausing video");
+          video.pause();
+        });
+      });
+    </script>
   </body>
 </html>

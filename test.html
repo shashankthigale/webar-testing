@@ -9,50 +9,52 @@
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
     <style>
-      body, html {
+      html, body {
         margin: 0;
         padding: 0;
         height: 100%;
         overflow: hidden;
+        font-family: sans-serif;
       }
+
       #start-overlay {
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: #000;
-        color: #fff;
-        z-index: 10;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: black;
+        color: white;
+        z-index: 999;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
       }
-      #start-overlay h1 {
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-      }
-      #start-overlay button {
-        padding: 12px 20px;
-        font-size: 1rem;
-        background: #00b894;
+
+      #start-button {
+        padding: 14px 28px;
+        font-size: 16px;
+        background-color: #00cec9;
+        color: white;
         border: none;
         border-radius: 6px;
-        color: white;
         cursor: pointer;
+        margin-top: 12px;
       }
     </style>
   </head>
 
   <body>
-    <!-- 👇 Tap-to-start overlay -->
+    <!-- 👆 Tap-to-start overlay -->
     <div id="start-overlay">
       <h1>Tap to Start AR Experience</h1>
       <button id="start-button">Start</button>
     </div>
 
-    <!-- ✅ AR Scene (always visible, but won't run until we start it) -->
+    <!-- ✅ A-Frame Scene (Never hidden!) -->
     <a-scene
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: true; uiLoading: true;"
       embedded
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
@@ -90,31 +92,34 @@
       const startButton = document.getElementById("start-button");
       const overlay = document.getElementById("start-overlay");
       const video = document.getElementById("ad-video");
+      const target = document.getElementById("video-target");
+
+      let audioUnlocked = false;
 
       startButton.addEventListener("click", async () => {
-        // Attempt to unlock video/audio
-        await video.play().catch(() => {});
-        video.pause(); // Wait for marker
+        // Unlock video/audio on user gesture
+        try {
+          await video.play();
+        } catch (e) {
+          console.warn("Autoplay failed (expected), will retry later.");
+        }
+        video.pause();
+        audioUnlocked = true;
 
         // Hide overlay
         overlay.style.display = "none";
+      });
 
-        // Start MindAR after tap
-        const sceneEl = document.querySelector("a-scene");
-        const mindarComponent = sceneEl.components["mindar-image"];
-        mindarComponent.start();
-
-        // Play/pause video on marker
-        const target = document.querySelector("#video-target");
-        target.addEventListener("targetFound", () => {
-          console.log("Marker found: playing video");
+      target.addEventListener("targetFound", () => {
+        console.log("🔍 Marker detected");
+        if (audioUnlocked) {
           video.play();
-        });
+        }
+      });
 
-        target.addEventListener("targetLost", () => {
-          console.log("Marker lost: pausing video");
-          video.pause();
-        });
+      target.addEventListener("targetLost", () => {
+        console.log("🔍 Marker lost");
+        video.pause();
       });
     </script>
   </body>

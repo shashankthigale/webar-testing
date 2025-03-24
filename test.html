@@ -14,7 +14,6 @@
         padding: 0;
         height: 100%;
         overflow: hidden;
-        font-family: sans-serif;
       }
       #start-overlay {
         position: fixed;
@@ -45,73 +44,75 @@
   </head>
 
   <body>
-    <!-- 🚀 Tap-to-start overlay -->
+    <!-- 👇 Tap-to-start overlay -->
     <div id="start-overlay">
       <h1>Tap to Start AR Experience</h1>
       <button id="start-button">Start</button>
     </div>
 
-    <!-- 🎯 AR Scene -->
-    <div id="ar-container" style="display: none;">
-      <a-scene
-        mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: yes; uiLoading: yes;"
-        embedded
-        color-space="sRGB"
-        renderer="colorManagement: true, physicallyCorrectLights"
-        vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: true"
-      >
-        <a-assets>
-          <video
-            id="ad-video"
-            src="./ad.mp4"
-            preload="auto"
-            crossorigin="anonymous"
-            playsinline
-            webkit-playsinline
-            controls
-          ></video>
-        </a-assets>
+    <!-- ✅ AR Scene (always visible, but won't run until we start it) -->
+    <a-scene
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: yes; uiLoading: yes;"
+      embedded
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: true"
+      id="ar-scene"
+    >
+      <a-assets>
+        <video
+          id="ad-video"
+          src="./ad.mp4"
+          preload="auto"
+          crossorigin="anonymous"
+          playsinline
+          webkit-playsinline
+          controls
+        ></video>
+      </a-assets>
 
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-        <a-entity mindar-image-target="targetIndex: 0" id="video-target">
-          <a-video
-            id="video-plane"
-            src="#ad-video"
-            width="1"
-            height="0.6"
-            position="0 0 0"
-            rotation="0 0 0"
-          ></a-video>
-        </a-entity>
-      </a-scene>
-    </div>
+      <a-entity mindar-image-target="targetIndex: 0" id="video-target">
+        <a-video
+          id="video-plane"
+          src="#ad-video"
+          width="1"
+          height="0.6"
+          position="0 0 0"
+          rotation="0 0 0"
+        ></a-video>
+      </a-entity>
+    </a-scene>
 
     <script>
       const startButton = document.getElementById("start-button");
       const overlay = document.getElementById("start-overlay");
-      const arContainer = document.getElementById("ar-container");
       const video = document.getElementById("ad-video");
 
       startButton.addEventListener("click", async () => {
-        // Unlock video with audio
-        await video.play().catch((e) => console.warn("Autoplay failed:", e));
-        video.pause(); // Pause until marker is found
+        // Attempt to unlock video/audio
+        await video.play().catch(() => {});
+        video.pause(); // Wait for marker
 
-        // Hide overlay and show AR
+        // Hide overlay
         overlay.style.display = "none";
-        arContainer.style.display = "block";
 
+        // Start MindAR after tap
+        const sceneEl = document.querySelector("a-scene");
+        const mindarComponent = sceneEl.components["mindar-image"];
+        mindarComponent.start();
+
+        // Play/pause video on marker
         const target = document.querySelector("#video-target");
-
         target.addEventListener("targetFound", () => {
-          console.log("Marker found, playing video with sound");
+          console.log("Marker found: playing video");
           video.play();
         });
 
         target.addEventListener("targetLost", () => {
-          console.log("Marker lost, pausing video");
+          console.log("Marker lost: pausing video");
           video.pause();
         });
       });
